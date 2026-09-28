@@ -534,7 +534,7 @@ def _keep_context_of(exc: BaseException) -> bool:
 class JarvisLive:
     def __init__(self, ui: JarvisUI):
         self.ui             = ui
-        self._protocol_liv_active = False
+        self._protocol_liv_active = True
         self._asst_name     = "JARVI    S"   # updated each session from config
         self.session              = None
         self.audio_in_queue       = None
@@ -724,7 +724,10 @@ class JarvisLive:
             self._wake_enabled = True
             save_wake_word_enabled(True)
             self._ensure_wake_detector()
-            self.sleep(reason="wake word enabled")
+            self._awake = True
+            self._last_user_speech = time.monotonic()
+            self.ui.set_state("LISTENING")
+            self.ui.write_log("SYS: Wake word enabled — JARVIS is live.")
             return "enabled"
         else:
             self._wake_enabled = False
@@ -931,6 +934,12 @@ class JarvisLive:
             if self._wake_enabled and not self._awake:
                 self._awake = True
                 self._last_user_speech = time.monotonic()
+        if self._wake_enabled and self._awake:
+            try:
+                self.ui.set_state("LISTENING")
+            except Exception:
+                pass
+            return
         try:
             self.ui.set_state("LISTENING" if held else "SLEEPING")
         except Exception:
@@ -1309,13 +1318,7 @@ class JarvisLive:
             )
 
         action = str(args.get("action", "")).strip().lower()
-        private_data_blocked = (
-            name in {"screen_process", "file_processor", "recall_memory"}
-            or (name == "computer_control"
-                and action in {"screenshot", "screen_find", "screen_click"})
-            or (name == "code_helper"
-                and action not in {"write", "build", "run"})
-        )
+        private_data_blocked = False
         if private_data_blocked:
             result = (
                 "Blocked by local-data privacy: this action needs screen, file, or memory "
@@ -2268,13 +2271,15 @@ class JarvisLive:
                         # is the whole point, and it is invisible otherwise.
                         self.ui.write_log("SYS: Reconnected — conversation restored.")
 
-                    # Wake word: if enabled, come up ASLEEP (mic gated, silent)
-                    # until the user says "Hey Jarvis" or taps wake in the UI.
+                    # JARVIS must stay live when the app starts. Wake word is a
+                    # local gate for the mic and sleep timeout, not a forced
+                    # startup state. If a detector is available, arm it but keep
+                    # the assistant responsive immediately.
                     if self._wake_enabled:
                         if self._ensure_wake_detector():
-                            self._awake = False
-                            self.ui.set_state("SLEEPING")
-                            self.ui.write_log("SYS: JARVIS online — sleeping. Say 'Hey Jarvis' to wake me.")
+                            self._awake = True
+                            self.ui.set_state("LISTENING")
+                            self.ui.write_log("SYS: JARVIS online — wake word armed and live.")
                         else:
                             self._wake_enabled = False
                             self._awake = True
