@@ -3056,7 +3056,7 @@ class MainWindow(QMainWindow):
         self.on_voice_change   = None   # callable: () -> None — rebuild session with new voice
         self.on_audio_device_change = None  # callable: () -> None — reopen audio streams
         self.on_protocol_liv_toggle = None
-        self._protocol_liv_active = True
+        self._protocol_liv_active = False
         self._confirm_overlay  = None   # live ConfirmBanner, if one is on screen
         self.get_plugins       = None   # callable: () -> list[dict], set by JarvisLive
         self.get_plugin_settings = None # callable: () -> list[dict] settings schemas, set by JarvisLive
@@ -4361,10 +4361,10 @@ class MainWindow(QMainWindow):
             f"QPushButton:hover {{ color: {C.WHITE}; border-color: {C.BORDER_B}; }}"
         )
         self._protocol_btn.setToolTip(
-            "Local actions are enabled until Jarvis closes. Built-in screen/file/memory analysis is blocked from Gemini. "
-            "Gemini receives microphone audio and spoken requests. Arbitrary commands are not network-sandboxed."
+            "Local computer actions are enabled for this session. Requested screen captures, file content, and memory results may be sent to Gemini. "
+            "Actions can change files or system settings."
             if enabled else
-            "Enable local actions for this session. Gemini receives microphone audio and spoken requests."
+            "Enable local computer actions for this session. Requested screen captures, file content, and memory results may be sent to Gemini."
         )
 
     def _toggle_protocol_liv(self):

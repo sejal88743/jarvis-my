@@ -1,3 +1,4 @@
+import asyncio
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -41,6 +42,15 @@ class WakeLiveStateTests(unittest.TestCase):
         self.live._on_ptt(False)
 
         self.assertEqual(self.ui.state, "LISTENING")
+
+    def test_screen_tool_requires_protocol_liv_opt_in(self):
+        self.assertFalse(self.live._protocol_liv_active)
+
+        response = asyncio.run(self.live._execute_tool(SimpleNamespace(
+            name="screen_process", args={}, id="test-call"
+        )))
+
+        self.assertIn("Protocol LIV is OFF", response.response["result"])
 
 
 if __name__ == "__main__":

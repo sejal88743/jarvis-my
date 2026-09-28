@@ -534,7 +534,7 @@ def _keep_context_of(exc: BaseException) -> bool:
 class JarvisLive:
     def __init__(self, ui: JarvisUI):
         self.ui             = ui
-        self._protocol_liv_active = True
+        self._protocol_liv_active = False
         self._asst_name     = "JARVI    S"   # updated each session from config
         self.session              = None
         self.audio_in_queue       = None
@@ -1311,20 +1311,6 @@ class JarvisLive:
         if (name in _PROTOCOL_LIV_TOOLS or is_plugin) and not self._protocol_liv_active:
             result = "Protocol LIV is OFF. Enable it in the HUD controls before using local computer actions."
             self.ui.write_log("SYS: Local action blocked — Protocol LIV is OFF.")
-            if not self.ui.muted:
-                self.ui.set_state("LISTENING")
-            return types.FunctionResponse(
-                id=fc.id, name=name, response={"result": result}
-            )
-
-        action = str(args.get("action", "")).strip().lower()
-        private_data_blocked = False
-        if private_data_blocked:
-            result = (
-                "Blocked by local-data privacy: this action needs screen, file, or memory "
-                "content that would be sent to a cloud model. That content was not accessed or sent."
-            )
-            self.ui.write_log("SYS: Blocked a cloud-bound local-data action by privacy policy.")
             if not self.ui.muted:
                 self.ui.set_state("LISTENING")
             return types.FunctionResponse(
